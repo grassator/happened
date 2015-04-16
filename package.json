@@ -1,0 +1,28 @@
+{
+  "name": "happened",
+  "description": "PubSub for modern era",
+  "repository": "https://github.com/grassator/happened.git",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "main": "dist/main.js",
+  "devDependencies": {
+    "babel-core": "^4.7.12",
+    "babel-loader": "^4.1.0",
+    "chai": "^2.1.1",
+    "del": "^1.1.1",
+    "es5-shim": "^4.1.0",
+    "eslint": "^0.18.0",
+    "eslint-loader": "^0.9.0",
+    "gulp": "^3.8.11",
+    "gulp-util": "^3.0.4",
+    "karma": "^0.12.31",
+    "karma-chai": "^0.1.0",
+    "karma-mocha": "^0.1.10",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-webpack": "^1.5.0",
+    "mocha": "^2.2.1",
+    "webpack": "^1.7.3"
+  }
+}
