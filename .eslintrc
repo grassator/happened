@@ -15,21 +15,9 @@
         "space-after-keywords": [2, "always"],
         "space-before-blocks": [2, "always"],
         "global-strict": [2, "never"],
-        "quotes": [2, "single"],
-        "react/self-closing-comp": 1,
-        "react/no-did-mount-set-state": 1,
-        "react/no-did-update-set-state": 1,
-        "react/jsx-uses-react": 1,
-        "react/jsx-uses-vars": 1,
-        "react/react-in-jsx-scope": 1
+        "quotes": [2, "single"]
     },
-    "plugins": [
-        "react"
-    ],
     "globals": {
-        "require": false,
-        "module": false,
-        "window": false,
-        "document": false
+        "HAPPENED_LIB_ENV": false
     }
 }

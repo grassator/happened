@@ -29,10 +29,7 @@ module.exports = function (environment) {
 
         plugins: [
             new webpack.DefinePlugin({
-                'process.env': {
-                    // This has effect on the react lib size
-                    'NODE_ENV': JSON.stringify(environment)
-                }
+                'HAPPENED_LIB_ENV': JSON.stringify(environment)
             })
         ],
 
@@ -60,6 +57,11 @@ module.exports = function (environment) {
     if (environment === 'production') {
         conf.plugins.push(
             new webpack.optimize.DedupePlugin(),
+            new webpack.optimize.UglifyJsPlugin({
+                compress: {
+                    warnings: false
+                }
+            }),
             new webpack.optimize.OccurenceOrderPlugin(),
             new webpack.optimize.AggressiveMergingPlugin()
         );
