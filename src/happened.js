@@ -1,4 +1,5 @@
 const happened = {};
+const ALL_EVENTS = happened.ALL_EVENTS = '357dada3-e2a8-4966-8bd1-ea5c52752f63';
 
 // This weird magic is manual optimization for file size
 const channelMap = Object.create(null);
@@ -9,10 +10,8 @@ let currentDispatcher = dispatcherAsync;
 
 happened.SYNC = dispatcherSync;
 
-happened.ALL_EVENTS = '357dada3-e2a8-4966-8bd1-ea5c52752f63';
 
 /**
- * This callback is displayed as part of the Requester class.
  * @callback happened~dispatcher
  * @param {Function} callback
  */
@@ -106,6 +105,7 @@ happened.create = function () {
     }
 
     return Object.freeze({
+        ALL_EVENTS,
         off,
 
         on: function (name, callback, thisArg) {
@@ -133,7 +133,7 @@ happened.create = function () {
             }
 
             let eventCallbackList = callbackMap[name];
-            let allEventsCallbackList = callbackMap[happened.ALL_EVENTS];
+            let allEventsCallbackList = callbackMap[ALL_EVENTS];
 
             if (!eventCallbackList && !allEventsCallbackList) {
                 return;
@@ -158,6 +158,25 @@ happened.create = function () {
             });
         }
     });
+};
+
+/**
+ * A helper for mixin happened instances into other objects.
+ * @param {object} object
+ */
+happened.addTo = function (object) {
+    if (HAPPENED_LIB_ENV !== 'production' &&
+        typeof object !== 'object'
+    ) {
+        throw new Error('`happened` can only be mixed into an object');
+    }
+    const events = happened.create();
+    object.on = events.on;
+    object.once = events.once;
+    object.off = events.off;
+    object.trigger = events.trigger;
+    object.ALL_EVENTS = events.ALL_EVENTS;
+    return events;
 };
 
 /**

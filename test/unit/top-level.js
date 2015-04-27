@@ -5,6 +5,7 @@ function assertDuckType(obj) {
     assert.isFunction(obj.once);
     assert.isFunction(obj.off);
     assert.isFunction(obj.trigger);
+    assert.isString(obj.ALL_EVENTS);
 }
 
 describe('Top Level API', function () {
@@ -48,6 +49,26 @@ describe('Top Level API', function () {
 
         it('should return the same instance for multiple calls with same name', function () {
             assert.equal(happened.channel('foo'), happened.channel('foo'));
+        });
+
+    });
+
+    describe('addTo', function () {
+
+        it('should require an object', function () {
+            assert.throws(function () {
+                happened.addTo(5);
+            }, Error);
+        });
+
+        it('should return an instance', function () {
+            assertDuckType(happened.addTo({}));
+        });
+
+        it('should mix in all events in passed object', function () {
+            let obj = {};
+            happened.addTo(obj);
+            assertDuckType(obj);
         });
 
     });
