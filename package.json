@@ -1,12 +1,12 @@
 {
   "name": "happened",
-  "description": "PubSub for modern era",
+  "description": "Small and nice PubSub and event bus library with custom dispatcher support.",
   "repository": "https://github.com/grassator/happened.git",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "scripts": {
     "test": "gulp test"
   },
-  "main": "dist/main.js",
+  "main": "dist/happened.js",
   "devDependencies": {
     "babel-core": "^4.7.12",
     "babel-loader": "^4.1.0",
