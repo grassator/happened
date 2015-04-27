@@ -9,6 +9,8 @@ let currentDispatcher = dispatcherAsync;
 
 happened.SYNC = dispatcherSync;
 
+happened.ALL_EVENTS = '357dada3-e2a8-4966-8bd1-ea5c52752f63';
+
 /**
  * This callback is displayed as part of the Requester class.
  * @callback happened~dispatcher
@@ -125,21 +127,33 @@ happened.create = function () {
                 throw new Error('You need to provide a name to trigger an event');
             }
 
-            let callbackList = callbackMap[name];
-            if (!callbackList) {
+            let params = [];
+            for (let i = 1; i < arguments.length; ++i) {
+                params.push(arguments[i]);
+            }
+
+            let eventCallbackList = callbackMap[name];
+            let allEventsCallbackList = callbackMap[happened.ALL_EVENTS];
+
+            if (!eventCallbackList && !allEventsCallbackList) {
                 return;
             }
 
-            let params = [];
-            let args = arguments;
-            for (let i = 1; i < args.length; ++i) {
-                params.push(args[i]);
-            }
-
-            callbackList = callbackList.slice();
             currentDispatcher(function () {
-                for (let i = 0; i < callbackList.length; ++i) {
-                    callbackList[i].callback.apply(callbackList[i].thisArg, params);
+                if (eventCallbackList) {
+                    eventCallbackList = eventCallbackList.slice();
+                    for (let i = 0; i < eventCallbackList.length; ++i) {
+                        eventCallbackList[i].callback.apply(eventCallbackList[i].thisArg, params);
+                    }
+                }
+
+                if (allEventsCallbackList) {
+                    allEventsCallbackList = allEventsCallbackList.slice();
+                    for (let i = 0; i < allEventsCallbackList.length; ++i) {
+                        allEventsCallbackList[i].callback.call(
+                            allEventsCallbackList[i].thisArg, name, params
+                        );
+                    }
                 }
             });
         }

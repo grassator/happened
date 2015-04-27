@@ -103,5 +103,21 @@ describe('Instance API', function () {
         assert.equal(spy.called, 0);
     });
 
+    it('should allow to subscribe to all events', function () {
+        let spy = bond();
+        instance.on(happened.ALL_EVENTS, spy);
+        instance.trigger('foo');
+        instance.trigger('bar');
+        assert.equal(spy.called, 2);
+    });
+
+    it('should allow to unsubscribe from all-events callback', function () {
+        let spy = bond();
+        instance.on(happened.ALL_EVENTS, spy);
+        instance.off(happened.ALL_EVENTS, spy);
+        instance.trigger('foo');
+        assert.equal(spy.called, 0);
+    });
+
 });
 
