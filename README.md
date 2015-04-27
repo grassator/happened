@@ -129,16 +129,38 @@ This a preconstructed [instance](#instance-methods) of `happened` that can be us
 
 Constructs a new [instance](#instance-methods) of `happened`.
 
-#### `happened.channel(name : string)`
+```js
+happened.create() => HappenedInstance
+```
+
+#### `happened.channel()`
 
 Given the same name will always return the same singleton [instance](#instance-methods) of `happened`, creating it if necessary. Allows for [channel-style](#public-channels) usage.
 
-#### `happened.addTo(target : Object)`
+```js
+happened.channel(name : string) => HappenedInstance
+```
+
+#### `happened.addTo()`
 
 This is convenience method to create a new instance of `happened` and copy it's methods `on`, `once`, `off`, `trigger` and a constant `ALL_EVENTS` to a given `target`:
 
 ```js
 happened.addTo(target : Object) => HappenedInstance
+```
+
+#### `happened.setDispatcher()`
+
+Changes current dispatcher to a provided one. `dispatcher` is simply a function that accepts a callback that is guaranteed to be executed at some point in the future, and also guarantees that callbacks will be executed in the same order as they were submitted to dispatcher. `setTimeout` (used by default in `happened`) and `process.nextTick` are good examples of such a function.
+
+```js
+happened.setDispatcher(dispatcher : (callback : void) => void) => void
+```
+
+If you want your events to be dispatched synchronously, you can add following statement before and usages of `happened`:
+
+```js
+happened.setDispatcher(happened.SYNC);
 ```
 
 ### Instance Methods
