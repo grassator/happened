@@ -5,7 +5,7 @@ describe('Instance API', function () {
     let instance;
 
     beforeEach(function () {
-        happened.setDispatcher(happened.SYNC);
+        happened.setDefaultScheduler(happened.SYNC);
         instance = happened.create();
     });
 

@@ -89,17 +89,17 @@ function Artist() {
 }
 ```
 
+> NOTE: `setScheduler` method is not copied by `addTo` and in general is considered a bad practice.
+
 ## More Good Stuff
 
 * Zero dependencies
 * Minimal interface (`on`, `once`, `off`, `trigger`), with utility methods exposed only on a global object. 
 * UMD package
-* Support for custom dispatchers.
+* Support for custom schedulers.
 * Support for legacy browsers (IE6) (see [requirements](#requirements) for details)
 * Node.js support
 * all `happened` instances are [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) (immutable) if supported by environment
-
-
 
 ## Requirements
 
@@ -107,7 +107,7 @@ For synchronous usage `happened` supports any ECMAScript 5 compliant environment
 
 Async (setTimeout) mode is supported for all mainstream browsers and Node.js, but may not is some esoteric environments, like [Qt QML](http://doc.qt.io/qt-5/qtqml-javascript-hostenvironment.html).
 
-`happened` by default uses asynchronous event dispatching. If you want events to be dispatched faster, you can use global `setDispatcher` to inject other dispatchers, such as [setImmediate](https://github.com/YuzuJS/setImmediate) for macro-task behavior or `process.nextTick` for micro-tasks.
+`happened` by default uses asynchronous event dispatching. If you want events to be dispatched faster, you can use global `setDispatcher` to inject other schedulers, such as [setImmediate](https://github.com/YuzuJS/setImmediate) for macro-task behavior or `process.nextTick` for micro-tasks.
 
 ## API
 
@@ -116,10 +116,6 @@ This section contains reference for all public methods and properties of `happen
 Type signatures for methods are presented using [flow](http://flowtype.org/docs/functions.html) syntax.
 
 ### Top-Level Library Methods and Properties
-
-Main use case for this is to [provide events for instances of other classes](#mixin-for-objects).
-
-`happened` object exported by a library has an interface, that is a mixture of a factory and singleton patterns;
 
 #### `happened.global`
 
@@ -149,18 +145,18 @@ This is convenience method to create a new instance of `happened` and copy it's 
 happened.addTo(target : Object) => HappenedInstance
 ```
 
-#### `happened.setDispatcher()`
+#### `happened.setDefaultScheduler()`
 
-Changes current dispatcher to a provided one. `dispatcher` is simply a function that accepts a callback that is guaranteed to be executed at some point in the future, and also guarantees that callbacks will be executed in the same order as they were submitted to dispatcher. `setTimeout` (used by default in `happened`) and `process.nextTick` are good examples of such a function.
+Changes current scheduler to a provided one. `scheduler` is simply a function that accepts a callback that is guaranteed to be executed at some point in the future, and also guarantees that callbacks will be executed in the same order as they were submitted to scheduler. `setTimeout` (used by default in `happened`) and `process.nextTick` are good examples of such a function.
 
 ```js
-happened.setDispatcher(dispatcher : (callback : void) => void) => void
+happened.setDefaultScheduler(scheduler : (callback : void) => void) => void
 ```
 
 If you want your events to be dispatched synchronously, you can add following statement before and usages of `happened`:
 
 ```js
-happened.setDispatcher(happened.SYNC);
+happened.setDefaultScheduler(happened.SYNC);
 ```
 
 ### Instance Methods
@@ -227,6 +223,14 @@ happened.global.trigger(
     name      : string,
     ...params : any
 ) => void
+```
+
+#### `setScheduler`
+
+Allows you to change scheduler for a particular instance:
+
+```js
+happened.global.setScheduler(scheduler : (callback : void) => void) => void;
 ```
 
 ## Contributing

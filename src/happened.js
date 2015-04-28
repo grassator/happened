@@ -4,33 +4,32 @@ const ALL_EVENTS = happened.ALL_EVENTS = '357dada3-e2a8-4966-8bd1-ea5c52752f63';
 // This weird magic is manual optimization for file size
 const channelMap = Object.create(null);
 
-function dispatcherSync(callback) { callback(); }
-let dispatcherAsync = (this && this.setTimeout) || dispatcherSync;
-let currentDispatcher = dispatcherAsync;
+function syncScheduler(callback) { callback(); }
+let defaultScheduler = (this && this.setTimeout) || syncScheduler;
 
-happened.SYNC = dispatcherSync;
+happened.SYNC = syncScheduler;
 
 
 /**
- * @callback happened~dispatcher
+ * @callback happened~scheduler
  * @param {Function} callback
  */
 
 /**
- * Changes current dispatcher to a provided one.
- * `dispatcher` is simply a function that accepts a callback that is
+ * Changes default scheduler to a provided one.
+ * `scheduler` is simply a function that accepts a callback that is
  * guaranteed to be executed at some point in the future, and also
  * guarantees that callbacks will be executed in the same order as
- * they were submitted to dispatcher.
- * @param {happened~dispatcher} dispatcher
+ * they were submitted to scheduler.
+ * @param {happened~scheduler} scheduler
  */
-happened.setDispatcher = function (dispatcher) {
+happened.setDefaultScheduler = function (scheduler) {
     if (HAPPENED_LIB_ENV !== 'production' &&
-        typeof dispatcher !== 'function'
+        typeof scheduler !== 'function'
     ) {
-        throw new Error('Dispatcher must be a function');
+        throw new Error('Scheduler must be a function');
     }
-    currentDispatcher = dispatcher;
+    defaultScheduler = scheduler;
 };
 
 /**
@@ -47,6 +46,7 @@ happened.setDispatcher = function (dispatcher) {
  */
 happened.create = function () {
     let callbackMap = Object.create(null);
+    let scheduler = defaultScheduler;
 
     function baseOn(name, callback, thisArg, original) {
         if (HAPPENED_LIB_ENV !== 'production' &&
@@ -103,21 +103,17 @@ happened.create = function () {
             }
         }
     }
-
     return Object.freeze({
         ALL_EVENTS,
         off,
 
-        on: function (name, callback, thisArg) {
-            baseOn(name, callback, thisArg);
-        },
-
-        once: function (name, callback, thisArg) {
-            function customCallback() {
-                off(name, customCallback);
-                callback.apply(this, arguments);
+        setScheduler: function (newScheduler) {
+            if (HAPPENED_LIB_ENV !== 'production' &&
+                typeof scheduler !== 'function'
+            ) {
+                throw new Error('Scheduler must be a function');
             }
-            baseOn(name, customCallback, thisArg, callback);
+            defaultScheduler = newScheduler;
         },
 
         trigger: function (name) {
@@ -139,7 +135,7 @@ happened.create = function () {
                 return;
             }
 
-            currentDispatcher(function () {
+            scheduler(function () {
                 if (eventCallbackList) {
                     eventCallbackList = eventCallbackList.slice();
                     for (let i = 0; i < eventCallbackList.length; ++i) {
@@ -156,6 +152,18 @@ happened.create = function () {
                     }
                 }
             });
+        },
+
+        on: function (name, callback, thisArg) {
+            baseOn(name, callback, thisArg);
+        },
+
+        once: function (name, callback, thisArg) {
+            function customCallback() {
+                off(name, customCallback);
+                callback.apply(this, arguments);
+            }
+            baseOn(name, customCallback, thisArg, callback);
         }
     });
 };

@@ -2,7 +2,7 @@
   "name": "happened",
   "description": "Small and nice PubSub and event bus library with custom dispatcher support.",
   "repository": "https://github.com/grassator/happened.git",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "scripts": {
     "test": "gulp test"
   },
