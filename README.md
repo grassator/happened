@@ -5,7 +5,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Dependency Status][daviddm-url]][daviddm-image]
 
-`happened` is a tiny PubSub library (~700 bytes minified and gzipped). It's designed to be an easy replacement for any other PubSub library (e.g. Backbone.Events), but also because of it's tiny size, it's a good choice for any other client-side that wants to provide events without external dependencies. 
+`happened` is a tiny PubSub library (~730 bytes minified and gzipped). It's designed to be an easy replacement for any other PubSub library (e.g. Backbone.Events), but also because of it's tiny size, it's a good choice for any other client-side that wants to provide events without external dependencies. 
 
 ## Examples
 
@@ -97,17 +97,15 @@ function Artist() {
 * Minimal interface (`on`, `once`, `off`, `trigger`), with utility methods exposed only on a global object. 
 * UMD package
 * Support for custom schedulers.
-* Support for legacy browsers (IE6) (see [requirements](#requirements) for details)
+* Support for legacy browsers like IE6-8 and Android 2.3
 * Node.js support
 * all `happened` instances are [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) (immutable) if supported by environment
 
 ## Requirements
 
-For synchronous usage `happened` supports any ECMAScript 5 compliant environment. This require a [shim](https://github.com/zloirock/core-js#ecmascript-5) for IE6-8 and some older Android versions.
+`happened` by default uses asynchronous event dispatching. If you want events to be dispatched faster, you can use `setScheduler` to inject other schedulers, such as [setImmediate](https://github.com/YuzuJS/setImmediate) for macro-task behavior or `process.nextTick` for micro-tasks.
 
-Async (setTimeout) mode is supported for all mainstream browsers and Node.js, but may not is some esoteric environments, like [Qt QML](http://doc.qt.io/qt-5/qtqml-javascript-hostenvironment.html).
-
-`happened` by default uses asynchronous event dispatching. If you want events to be dispatched faster, you can use global `setDispatcher` to inject other schedulers, such as [setImmediate](https://github.com/YuzuJS/setImmediate) for macro-task behavior or `process.nextTick` for micro-tasks.
+Default async (setTimeout) mode is supported for all mainstream browsers and Node.js, but may not work in some esoteric environments, like [Qt QML](http://doc.qt.io/qt-5/qtqml-javascript-hostenvironment.html). In this it falls back to synchronous scheduler.
 
 ## API
 

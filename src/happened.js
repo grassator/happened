@@ -1,10 +1,20 @@
 const happened = {};
 const ALL_EVENTS = happened.ALL_EVENTS = '357dada3-e2a8-4966-8bd1-ea5c52752f63';
 
-// This weird magic is manual optimization for file size
-const channelMap = Object.create(null);
+function syncScheduler(callback) {
+    callback();
+}
 
-function syncScheduler(callback) { callback(); }
+function createMap() {
+    return Object.create ? Object.create(null) : {};
+}
+
+function freezeIfPossible(obj) {
+    return Object.freeze ? Object.freeze(obj) : obj;
+}
+
+const channelMap = createMap();
+
 let defaultScheduler = (this && this.setTimeout) || syncScheduler;
 
 happened.SYNC = syncScheduler;
@@ -45,7 +55,7 @@ happened.setDefaultScheduler = function (scheduler) {
  * @returns {HappenedInstance}
  */
 happened.create = function () {
-    let callbackMap = Object.create(null);
+    let callbackMap = createMap();
     let scheduler = defaultScheduler;
 
     function baseOn(name, callback, thisArg, original) {
@@ -69,7 +79,7 @@ happened.create = function () {
 
     function off(name, callback) {
         if (!name && !callback) {
-            callbackMap = Object.create(null);
+            callbackMap = createMap();
             return;
         }
 
@@ -103,7 +113,8 @@ happened.create = function () {
             }
         }
     }
-    return Object.freeze({
+
+    return freezeIfPossible({
         ALL_EVENTS,
         off,
 
@@ -211,4 +222,4 @@ happened.channel = function (name) {
  */
 happened.global = happened.create();
 
-export default Object.freeze(happened);
+export default freezeIfPossible(happened);
