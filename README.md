@@ -5,7 +5,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Dependency Status][daviddm-url]][daviddm-image]
 
-`happened` is a tiny PubSub library (~730 bytes minified and gzipped). It's designed to be an easy replacement for any other PubSub library (e.g. Backbone.Events), but also because of it's tiny size, it's a good choice for any other client-side that wants to provide events without external dependencies. 
+`happened` is a tiny PubSub library (~730 bytes minified and gzipped). It's designed to be an easy replacement for any other PubSub library (e.g. Backbone.Events), but also because of it's tiny size, it's a good choice for any other client-side library that wants to provide events without external dependencies. 
 
 ## Examples
 
