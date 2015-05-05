@@ -13,34 +13,22 @@ function freezeIfPossible(obj) {
     return Object.freeze ? Object.freeze(obj) : obj;
 }
 
-const channelMap = createMap();
-
-let defaultScheduler = (this && this.setTimeout) || syncScheduler;
-
-happened.SYNC = syncScheduler;
-
+let defaultScheduler = typeof setTimeout === 'function' ? function (callback) {
+    setTimeout(callback);
+} : syncScheduler;
 
 /**
  * @callback happened~scheduler
  * @param {Function} callback
  */
 
+/** @type {happened~scheduler} */
+happened.SYNC = syncScheduler;
+
 /**
- * Changes default scheduler to a provided one.
- * `scheduler` is simply a function that accepts a callback that is
- * guaranteed to be executed at some point in the future, and also
- * guarantees that callbacks will be executed in the same order as
- * they were submitted to scheduler.
- * @param {happened~scheduler} scheduler
+ * @typedef {Object} HappenedOptions
+ * @property {happened~scheduler} scheduler
  */
-happened.setDefaultScheduler = function (scheduler) {
-    if (HAPPENED_LIB_ENV !== 'production' &&
-        typeof scheduler !== 'function'
-    ) {
-        throw new Error('Scheduler must be a function');
-    }
-    defaultScheduler = scheduler;
-};
 
 /**
  * @typedef {Object} HappenedInstance
@@ -52,11 +40,28 @@ happened.setDefaultScheduler = function (scheduler) {
 
 /**
  * Creates and returns a new instance of `happened`.
+ * @param {HappenedOptions} options
  * @returns {HappenedInstance}
  */
-happened.create = function () {
+happened.create = function (options) {
+
+    if (HAPPENED_LIB_ENV !== 'production' &&
+        !(
+            typeof options === 'undefined' ||
+            (typeof options === 'object' && options !== null)
+        )
+    ) {
+        throw new Error('You need to provide a an object as `options`');
+    }
+
     let callbackMap = createMap();
-    let scheduler = defaultScheduler;
+    let scheduler = (options && options.scheduler) || defaultScheduler;
+
+    if (HAPPENED_LIB_ENV !== 'production' &&
+        typeof scheduler !== 'function'
+    ) {
+        throw new Error('`scheduler` provided in `options` must be a function');
+    }
 
     function baseOn(name, callback, thisArg, original) {
         if (HAPPENED_LIB_ENV !== 'production' &&
@@ -118,15 +123,6 @@ happened.create = function () {
         ALL_EVENTS,
         off,
 
-        setScheduler: function (newScheduler) {
-            if (HAPPENED_LIB_ENV !== 'production' &&
-                typeof scheduler !== 'function'
-            ) {
-                throw new Error('Scheduler must be a function');
-            }
-            defaultScheduler = newScheduler;
-        },
-
         trigger: function (name) {
             if (HAPPENED_LIB_ENV !== 'production' &&
                 typeof name !== 'string'
@@ -183,43 +179,29 @@ happened.create = function () {
  * A helper for mixin happened instances into other objects.
  * @param {object} object
  */
-happened.addTo = function (object) {
+happened.addTo = function (object, instance) {
     if (HAPPENED_LIB_ENV !== 'production' &&
         typeof object !== 'object'
     ) {
         throw new Error('`happened` can only be mixed into an object');
     }
-    const events = happened.create();
-    object.on = events.on;
-    object.once = events.once;
-    object.off = events.off;
-    object.trigger = events.trigger;
-    object.ALL_EVENTS = events.ALL_EVENTS;
-    return events;
-};
 
-/**
- * Returns a happened instance for a given name. If one is not available,
- * it is created and cached, guaranteeing that multiple calls with the same
- * name will return the same instance.
- * @param {string} name
- */
-happened.channel = function (name) {
     if (HAPPENED_LIB_ENV !== 'production' &&
-        typeof name !== 'string'
+        !(
+        typeof instance === 'undefined' ||
+        (typeof instance === 'object' && instance !== null)
+        )
     ) {
-        throw new Error('You need to provide a name for a channel');
+        throw new Error('You need to provide a valid object as an instance of `happened`');
     }
-    if (!channelMap[name]) {
-        channelMap[name] = happened.create();
-    }
-    return channelMap[name];
-};
 
-/**
- * Global instance, handy for global event bus.
- * @type {HappenedInstance}
- */
-happened.global = happened.create();
+    instance = instance || happened.create();
+    object.on = instance.on;
+    object.once = instance.once;
+    object.off = instance.off;
+    object.trigger = instance.trigger;
+    object.ALL_EVENTS = instance.ALL_EVENTS;
+    return instance;
+};
 
 export default freezeIfPossible(happened);

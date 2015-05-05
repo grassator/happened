@@ -5,8 +5,9 @@ describe('Instance API', function () {
     let instance;
 
     beforeEach(function () {
-        happened.setDefaultScheduler(happened.SYNC);
-        instance = happened.create();
+        instance = happened.create({
+            scheduler: happened.SYNC
+        });
     });
 
     it('should require a name and a callback for subscription', function () {

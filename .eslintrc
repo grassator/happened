@@ -18,6 +18,7 @@
         "quotes": [2, "single"]
     },
     "globals": {
-        "HAPPENED_LIB_ENV": false
+        "HAPPENED_LIB_ENV": false,
+        "setTimeout": false
     }
 }

@@ -5,58 +5,46 @@
 [![Build Status][travis-image]][travis-url]
 [![Dependency Status][daviddm-url]][daviddm-image]
 
-`happened` is a tiny PubSub library (~730 bytes minified and gzipped). It's designed to be an easy replacement for any other PubSub library (e.g. Backbone.Events), but also because of it's tiny size, it's a good choice for any other client-side library that wants to provide events without external dependencies. 
+
+`happened` is a tiny PubSub library (~700 bytes minified and gzipped). It's designed to have a minimal viable set of features, making it an ideal choice for using in your own library or size-sensitive client code.
 
 ## Examples
 
-`happened` tries to cover all common use cases for PubSub:
+`happened` does not try include any unnecessary functionality in the core, but that doesn't mean that it's hard to use in all the common cases.
 
-### Global Event Bus
+### Basic usage
 
-Sometimes you just want a zero-hassle global event bus. `happened` provides pre-initialized global to support this use case:
-
-```js
-var happened = require('happened');
-happened.global.on('disco', function () {
-    console.log('dance');
-});
-happened.global.trigger('disco'); // "dance"
-```
-
-### Public Channels
-
-`happened` supports public channel setup by calling `happened.channel` method: 
-
-```js
-var happened = require('happened');
-var radioOne = happened.channel('radio1');
-radio1.on('morning-broadcast', function () {
-    console.log('wake up');
-});
-
-// in another place
-happened.channel('radio1').trigger('morning-broadcast', 'impossible'); // "wake up"
-
-```
-
-### Private Channels
-
-Calling `happened` without any parameters will always construct a new instance, that can be used as an event
+Calling `happened.create()` without any parameters will  construct a new instance, that can be used as an event bus:
 
 ```js
 var happened = require('happened');
 var topSecretMessages = happened.create();
-topSecretMessages.on('mission', function () {
-    console.log('completed');
+topSecretMessages.on('mission', function (type) {
+    console.log('completed mission ' + type);
 });
-topSecretMessages.trigger('mission', 'impossible'); // "completed"
+topSecretMessages.trigger('mission', 'impossible'); // "completed mission impossible"
+```
+
+This can also work as global event bus — just wrap it in a requirable module:
+
+```js
+// my-global-bus.js
+var happened = require('happened');
+module.exports = happened.create();
+
+// my-other-file.js
+var globalBus = require('./my-global-bus');
+globalBus.on('disco', function () {
+    console.log('dance');
+});
+globalBus.trigger('disco'); // "dance"
 ```
 
 ### Mixin for Objects
 
 It's a very common need to have PubSub methods directly exposed on some object, or all objects of a given class. This is usually solved by providing a mixin (e.g. Backbone.Events), which has a downside of a need to define a property on an object, that can conflict with your own properties, or even cause compiler deoptimization if it's injected dynamically by `on` method.
 
-All the methods on `happened` can be called in any context, so that means that they can be simply copied to a newly constructed instance in the constructor:
+All the methods on `happened` instance can be called in any context, so that means that they can be simply copied in the constructor of your class:
 
 ```js
 var happened = require('happened');
@@ -89,7 +77,36 @@ function Artist() {
 }
 ```
 
-> NOTE: `setScheduler` method is not copied by `addTo` and in general is considered a bad practice.
+### Public Channels
+
+The basic implementation of public channels is to return the same instance of `happened`, given the same string, representing the name of the channel, which is exactly what more general [memoization](http://en.wikipedia.org/wiki/Memoization) function does, which is available for example in [lodash](https://lodash.com/docs#memoize):
+
+```js
+var happened = require('happened');
+var _ = require('lodash');
+var channel = _.memoize(happened.create);
+
+var radioOne = channel('radio1');
+radio1.on('morning-broadcast', function () {
+    console.log('wake up');
+});
+
+// in another place
+channel('radio1').trigger('morning-broadcast'); // "wake up"
+```
+
+If you want to keep dependencies minimal it's also easy to write it yourself:
+
+```js
+var channel = (function () {
+    var cache = {};
+    return function (name) {
+        return cache.hasOwnProperty(name) ? cache[name] : (cache[name] = happened.create());
+    };
+})();
+```
+
+> At this point you are probably wondering why this is not included in the library itself. The are a couple of reasons for this. Firstly this is not an essential functionality that would be required by every use case. But more importantly, since `happened.create()` can accept `options` argument specifying a custom scheduler (and may be some other options later on) it, there is no way to unambiguously what would be the result of theoretical `happened.channel('one', options) === happened.channel('one', options2)`.
 
 ## More Good Stuff
 
@@ -103,9 +120,17 @@ function Artist() {
 
 ## Requirements
 
-`happened` by default uses asynchronous event dispatching. If you want events to be dispatched faster, you can use `setScheduler` to inject other schedulers, such as [setImmediate](https://github.com/YuzuJS/setImmediate) for macro-task behavior or `process.nextTick` for micro-tasks.
+`happened` by default uses asynchronous event dispatching. If you want events to be dispatched faster, you can use `scheduler` option in `happened.create` call to specify other schedulers, such as [setImmediate](https://github.com/YuzuJS/setImmediate) for macro-task behavior or `process.nextTick` for micro-tasks.
 
-Default async (setTimeout) mode is supported for all mainstream browsers and Node.js, but may not work in some esoteric environments, like [Qt QML](http://doc.qt.io/qt-5/qtqml-javascript-hostenvironment.html). In this it falls back to synchronous scheduler.
+Default async (setTimeout) mode is supported for all mainstream browsers and Node.js, but may not work in some esoteric environments, like [Qt QML](http://doc.qt.io/qt-5/qtqml-javascript-hostenvironment.html). In this case it falls back to synchronous scheduler.
+
+If you want to always create instance of `happened` with sync scheduler, you can create a simple proxy function:
+
+```js
+function createSyncEvents() {
+    return happened.create({ scheduler: happened.SYNC });
+}
+```
 
 ## API
 
@@ -115,24 +140,18 @@ Type signatures for methods are presented using [flow](http://flowtype.org/docs/
 
 ### Top-Level Library Methods and Properties
 
-#### `happened.global`
-
-This a preconstructed [instance](#instance-methods) of `happened` that can be used as a global event bus.
-
 #### `happened.create()`
 
 Constructs a new [instance](#instance-methods) of `happened`.
 
 ```js
-happened.create() => HappenedInstance
+happened.create(options : Object?) => HappenedInstance
 ```
 
-#### `happened.channel()`
+Right now the only supported field in `options` is `scheduler`:
 
-Given the same name will always return the same singleton [instance](#instance-methods) of `happened`, creating it if necessary. Allows for [channel-style](#public-channels) usage.
-
-```js
-happened.channel(name : string) => HappenedInstance
+```
+var nextTickBus = happened.create({ scheduler: process.nextTick.bind(process) });
 ```
 
 #### `happened.addTo()`
@@ -140,21 +159,14 @@ happened.channel(name : string) => HappenedInstance
 This is convenience method to create a new instance of `happened` and copy it's methods `on`, `once`, `off`, `trigger` and a constant `ALL_EVENTS` to a given `target`:
 
 ```js
-happened.addTo(target : Object) => HappenedInstance
+happened.addTo(target : Object, source : HappenedInstance?) => HappenedInstance
 ```
 
-#### `happened.setDefaultScheduler()`
+Calling this function without a `source` will create a new instance of `happened`, but you can also provide one in case you want to share event bus between several object or you want to use an instance with custom scheduler:
 
-Changes current scheduler to a provided one. `scheduler` is simply a function that accepts a callback that is guaranteed to be executed at some point in the future, and also guarantees that callbacks will be executed in the same order as they were submitted to scheduler. `setTimeout` (used by default in `happened`) and `process.nextTick` are good examples of such a function.
-
-```js
-happened.setDefaultScheduler(scheduler : (callback : void) => void) => void
 ```
-
-If you want your events to be dispatched synchronously, you can add following statement before and usages of `happened`:
-
-```js
-happened.setDefaultScheduler(happened.SYNC);
+var foo = {};
+happened.addTo(foo, happened.create({ scheduler: happened.SYNC }));
 ```
 
 ### Instance Methods
@@ -164,7 +176,7 @@ happened.setDefaultScheduler(happened.SYNC);
 This method is used to subscribe for a certain event:
 
 ```js
-happened.global.on(
+happenedInstance.on(
     name     : string,
     callback : (...params) => void,
     thisArg  : Object?
@@ -176,7 +188,7 @@ The `callback` will receive all the parameters except for the name of the event 
 Special case here is subscribing to all events, happening on the instance. To do this you need to provide `ALL_EVENTS` constant property available on all instances.
 
 ```js
-happened.global.on(
+happenedInstance.on(
     happened.ALL_EVENTS,
     callback : (name : string, params : Array<any>) => void,
     thisArg  : Object?
@@ -190,7 +202,7 @@ happened.global.on(
 Same as [`on`](#on), but causes the `callback` to only fire once before being `off`ed.
 
 ```js
-happened.global.once(
+happenedInstance.once(
     name     : string,
     callback : (...params) => void,
     thisArg  : Object?
@@ -202,7 +214,7 @@ happened.global.once(
 Removes a specific `callback` for an event with a given `name`.
 
 ```js
-happened.global.off(
+happenedInstance.off(
     name     : string?,
     callback : Function?
 ) => void
@@ -217,18 +229,10 @@ If called without any arguments, remove all callbacks for all events.
 Triggers callbacks for the given event `name`, additional `...params` to `trigger` will be passed along to the event callbacks.
 
 ```js
-happened.global.trigger(
+happenedInstance.trigger(
     name      : string,
     ...params : any
 ) => void
-```
-
-#### `setScheduler`
-
-Allows you to change scheduler for a particular instance:
-
-```js
-happened.global.setScheduler(scheduler : (callback : void) => void) => void;
 ```
 
 ## Contributing

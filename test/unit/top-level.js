@@ -16,10 +16,6 @@ describe('Top Level API', function () {
             assert(Object.isFrozen(happened));
         });
 
-        it('should have a global instance', function () {
-            assertDuckType(happened.global);
-        });
-
     });
 
     describe('create', function () {
@@ -31,24 +27,6 @@ describe('Top Level API', function () {
         it('should create instance of happened', function () {
             var instance = happened.create();
             assertDuckType(instance);
-        });
-
-    });
-
-    describe('channel', function () {
-
-        it('should require a name', function () {
-            assert.throws(function () {
-                happened.channel();
-            }, Error);
-        });
-
-        it('should return an instance', function () {
-            assertDuckType(happened.channel('foo'));
-        });
-
-        it('should return the same instance for multiple calls with same name', function () {
-            assert.equal(happened.channel('foo'), happened.channel('foo'));
         });
 
     });
@@ -69,6 +47,13 @@ describe('Top Level API', function () {
             let obj = {};
             happened.addTo(obj);
             assertDuckType(obj);
+        });
+
+        it('should accept a happened instance', function () {
+            let obj = {};
+            let instance = happened.create();
+            assert.equal(happened.addTo(obj, instance), instance);
+            assert.equal(instance.on, obj.on);
         });
 
     });
