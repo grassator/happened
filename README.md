@@ -106,7 +106,7 @@ var channel = (function () {
 })();
 ```
 
-> At this point you are probably wondering why this is not included in the library itself. The are a couple of reasons for this. Firstly this is not an essential functionality that would be required by every use case. But more importantly, since `happened.create()` can accept `options` argument specifying a custom scheduler (and may be some other options later on) it, there is no way to unambiguously what would be the result of theoretical `happened.channel('one', options) === happened.channel('one', options2)`.
+> At this point you are probably wondering why this is not included in the library itself. There are a couple of reasons for this. Firstly this is not an essential functionality that would be required for every use case. But more importantly, since `happened.create()` can accept `options` argument specifying a custom scheduler (and may be some other options later on), there is no way to unambiguously tell what would be the result of theoretical `happened.channel('one', options) === happened.channel('one', options2)`.
 
 ## More Good Stuff
 
